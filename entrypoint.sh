@@ -2,8 +2,7 @@
 set -e
 
 BASE_BRANCH="remotes/origin/$1"
-PATHSPEC=master
-#PATHSPEC=${@:2}
+PATHSPEC=${@:2}
 #FORK_POINT_SHA=$(git merge-base --fork-point $BASE_BRANCH || git merge-base $BASE_BRANCH HEAD)
 #BASE_BRANCH=origin/master
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
