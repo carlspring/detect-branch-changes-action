@@ -11,6 +11,8 @@ echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
 
 function check() {
 
+  readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
+
   if [[ -z "$(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC)" ]];
   then
 #    echo "Detected no changes on $PATHSPEC since $FORK_POINT_SHA"
@@ -19,6 +21,11 @@ function check() {
   else
 #    echo "Detected changes on $PATHSPEC since $FORK_POINT_SHA"
     echo "$BASE_BRANCH has incoming changes for '$PATHSPEC'"
+    
+    for changed_path in "${changed_paths}"; do
+      println "${changed_path}"
+    done
+
     echo ::set-output name=changed::true
   fi
 }
