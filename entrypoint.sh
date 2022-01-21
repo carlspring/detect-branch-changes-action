@@ -23,7 +23,7 @@ function check() {
     echo "$BASE_BRANCH has incoming changes for '$PATHSPEC'"
     
     for changed_path in "${changed_paths}"; do
-      println "${changed_path}"
+      echo "${changed_path}"
     done
 
     echo ::set-output name=changed::true
