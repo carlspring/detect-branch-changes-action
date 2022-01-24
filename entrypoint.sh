@@ -4,7 +4,7 @@ set -e
 BASE_BRANCH="remotes/origin/$1"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 FORK_POINT_SHA=$(git merge-base --fork-point $BASE_BRANCH || git merge-base $BASE_BRANCH HEAD)
-PATHSPEC=${@:2}
+#PATHSPEC=${@:2}
 #BASE_BRANCH=origin/master
 ATTEMPT_REBASE=true
 
@@ -14,6 +14,7 @@ function check() {
 
 
   echo "Version 1.0.0"
+  echo "Bash version:   `bash --version`"
   echo "-------------"
   echo "BASE_BRANCH:    ${BASE_BRANCH}"
   echo "CURRENT_BRANCH: ${CURRENT_BRANCH}"
