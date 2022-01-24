@@ -1,4 +1,9 @@
 #!/bin/bash
+
+bash --version
+
+exit 0
+
 set -e
 
 BASE_BRANCH="remotes/origin/$1"
