@@ -27,10 +27,10 @@ function check() {
       echo "${changed_path}"
     done
 
-    if [[ "$ATTEMPT_REBASE" == "true" ]]; then
-      git fetch
-      git rebase "${BASE_BRANCH}"
-    fi
+#    if [[ "$ATTEMPT_REBASE" == "true" ]]; then
+#      git fetch
+#      git rebase "${BASE_BRANCH}"
+#    fi
 
     echo ::set-output name=changed::true
   fi
