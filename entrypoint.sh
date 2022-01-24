@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bash --version
+echo "Bash version:   `bash --version`"
 
 exit 0
 
