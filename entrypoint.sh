@@ -21,7 +21,7 @@ function check() {
     echo ::set-output name=changed::false
   else
 #    echo "Detected changes on $PATHSPEC since $FORK_POINT_SHA"
-    echo "$BASE_BRANCH has incoming changes for '$PATHSPEC'"
+    echo "$BASE_BRANCH has incoming changes, (PATHSPEC: '$PATHSPEC'):"
     
     for changed_path in "${changed_paths}"; do
       echo "${changed_path}"
