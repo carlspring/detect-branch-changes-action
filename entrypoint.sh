@@ -1,33 +1,37 @@
 #!/bin/bash
 
-echo "Bash version:   `bash --version`"
-echo "Git version:    `git --version`"
 
-exit 1
 
 set -e
 
+echo "Script version 1.0.0"
+
+echo "--------------------"
+echo "BASH_VERSION:   ${BASH_VERSION}"
+
+echo "GIT_VERSION:    `git --version`"
+
 BASE_BRANCH="remotes/origin/$1"
+echo "BASE_BRANCH:    ${BASE_BRANCH}"
+
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "CURRENT_BRANCH: ${CURRENT_BRANCH}"
+
 FORK_POINT_SHA=$(git merge-base --fork-point $BASE_BRANCH || git merge-base $BASE_BRANCH HEAD)
-#PATHSPEC=${@:2}
-#BASE_BRANCH=origin/master
+echo "FORK_POINT_SHA: ${FORK_POINT_SHA}"
+
+PATHSPEC=${@:2}
+echo "PATHSPEC:       ${PATHSPEC}"
+
 ATTEMPT_REBASE=true
+echo "ATTEMPT_REBASE: ${ATTEMPT_REBASE}"
+echo "-------------"
+
+exit 1
 
 echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
 
 function check() {
-
-
-  echo "Version 1.0.0"
-  echo "Bash version:   `bash --version`"
-  echo "-------------"
-  echo "BASE_BRANCH:    ${BASE_BRANCH}"
-  echo "CURRENT_BRANCH: ${CURRENT_BRANCH}"
-  echo "FORK_POINT_SHA: ${FORK_POINT_SHA}"
-  echo "PATHSPEC:       ${PATHSPEC}"
-  echo "ATTEMPT_REBASE: ${ATTEMPT_REBASE}"
-  echo "-------------"
 
   readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
 
