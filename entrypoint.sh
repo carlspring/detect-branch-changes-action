@@ -32,7 +32,7 @@ function check() {
     echo "The $BASE_BRANCH upstream branch has incoming changes, (PATHSPEC: '${PATHSPEC}'):"
     
     for changed_path in "${changed_paths}"; do
-      echo "${changed_path}"
+      echo " > ${changed_path}"
     done
 
 #    if [[ "$ATTEMPT_REBASE" == "true" ]]; then
