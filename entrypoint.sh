@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Bash version:   `bash --version`"
+echo "Git version:    `git --version`"
 
 exit 0
 
