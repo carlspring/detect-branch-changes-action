@@ -3,7 +3,7 @@
 echo "Bash version:   `bash --version`"
 echo "Git version:    `git --version`"
 
-exit 0
+exit 1
 
 set -e
 
