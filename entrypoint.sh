@@ -29,7 +29,7 @@ function check() {
     echo "$BASE_BRANCH has no incoming changes for '${PATHSPEC}'"
     echo ::set-output name=changed::false
   else
-    echo "$BASE_BRANCH has incoming changes, (PATHSPEC: '${PATHSPEC}'):"
+    echo "The $BASE_BRANCH upstream branch has incoming changes, (PATHSPEC: '${PATHSPEC}'):"
     
     for changed_path in "${changed_paths}"; do
       echo "${changed_path}"
