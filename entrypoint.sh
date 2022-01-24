@@ -12,6 +12,11 @@ echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
 
 function check() {
 
+
+  echo "Version 1.0.0"
+  echo "-------------"
+
+
   readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
 
   if [[ -z "$(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC)" ]];
