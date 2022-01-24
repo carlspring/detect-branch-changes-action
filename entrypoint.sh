@@ -2,10 +2,10 @@
 set -e
 
 BASE_BRANCH="remotes/origin/$1"
-PATHSPEC=${@:2}
-#FORK_POINT_SHA=$(git merge-base --fork-point $BASE_BRANCH || git merge-base $BASE_BRANCH HEAD)
-#BASE_BRANCH=origin/master
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+FORK_POINT_SHA=$(git merge-base --fork-point $BASE_BRANCH || git merge-base $BASE_BRANCH HEAD)
+PATHSPEC=${@:2}
+#BASE_BRANCH=origin/master
 ATTEMPT_REBASE=true
 
 echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
@@ -15,18 +15,21 @@ function check() {
 
   echo "Version 1.0.0"
   echo "-------------"
-
+  echo "BASE_BRANCH:    ${BASE_BRANCH}"
+  echo "CURRENT_BRANCH: ${CURRENT_BRANCH}"
+  echo "FORK_POINT_SHA: ${FORK_POINT_SHA}"
+  echo "PATHSPEC:       ${PATHSPEC}"
+  echo "ATTEMPT_REBASE: ${ATTEMPT_REBASE}"
+  echo "-------------"
 
   readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
 
   if [[ -z "$(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC)" ]];
   then
-#    echo "Detected no changes on $PATHSPEC since $FORK_POINT_SHA"
-    echo "$BASE_BRANCH has no incoming changes for '$PATHSPEC'"
+    echo "$BASE_BRANCH has no incoming changes for '${PATHSPEC}'"
     echo ::set-output name=changed::false
   else
-#    echo "Detected changes on $PATHSPEC since $FORK_POINT_SHA"
-    echo "$BASE_BRANCH has incoming changes, (PATHSPEC: '$PATHSPEC'):"
+    echo "$BASE_BRANCH has incoming changes, (PATHSPEC: '${PATHSPEC}'):"
     
     for changed_path in "${changed_paths}"; do
       echo "${changed_path}"
