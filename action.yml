@@ -7,6 +7,10 @@ branding:
   color: yellow
 author: Bert Goethals
 inputs:
+  debug:
+    description: "Enables -x option in bash which will print more information in the console (POTENTIALLY SENSITIVE!)"
+    required: false
+    default: "false"
   base_branch:
     description: "Branch to compare with"
     required: false
@@ -15,6 +19,14 @@ inputs:
     description: "Pattern used to limit paths in the `git diff` command."
     required: false
     default: ""
+  rebase:
+    description: "Attempt to auto-rebase"
+    required: false
+    default: "false"
+  fail_on_changes:
+    description: "If rebase=false - then fail."
+    required: false
+    default: "false"
 outputs:
   changed:
     description: "Whether or not files matched by the pathspec were changed."
@@ -22,9 +34,12 @@ outputs:
   fork_point_sha:
     description: "The sha we compared with"
     value: ${{ steps.run.outputs.fork_point_sha }}
+  rebased:
+    description: "True, if rebase was attempted."
+    value: ${{ steps.run.outputs.rebased }}
 runs:
   using: 'composite'
   steps:
     - id: run
-      run: ${{ github.action_path }}/entrypoint.sh ${{ inputs.base_branch }} ${{ inputs.pathspec }}
+      run: ${{ github.action_path }}/entrypoint.sh ${{ inputs.debug }} ${{ inputs.rebase }} ${{ inputs.fail_on_changes }} ${{ inputs.base_branch }} ${{ inputs.pathspec }}
       shell: bash
