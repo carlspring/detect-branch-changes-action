@@ -39,6 +39,7 @@ echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
 function check() {
   [[ "$DEBUG_MODE" == "true" ]] && set -x
 
+  echo "Fetching changed paths..."
   readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
 
   if [[ -z "$(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC)" ]];
@@ -53,10 +54,12 @@ function check() {
 
     echo "Detected changes in the following paths:"
     echo "${changed_paths[@]}"
+    echo ""
 
     if [[ "$ATTEMPT_REBASE" == "true" ]]; then
       git fetch
       git rebase "${BASE_BRANCH}"
+      exit 0
     elif [[ "$FAIL_ON_CHANGES" == "true" ]]; then
       echo "Failing step to prevent further execution (FAIL_ON_CHANGES=$FAIL_ON_CHANGES)."
       exit 1
