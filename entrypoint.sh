@@ -39,16 +39,20 @@ echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
 function check() {
   [[ "$DEBUG_MODE" == "true" ]] && set -x
 
+  echo ""
   echo "Fetching changed paths..."
   readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
+  echo ""
 
   if [[ -z "$(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC)" ]];
   then
     echo "$BASE_BRANCH has no incoming changes for '${PATHSPEC}'"
+    echo ""
     echo ::set-output name=changed::false 
     echo ::set-output name=rebased::$ATTEMPT_REBASE
   else
     echo "The $BASE_BRANCH upstream branch has incoming changes, (PATHSPEC: '${PATHSPEC}'):"
+    echo ""
     echo ::set-output name=changed::true
     echo ::set-output name=rebased::$ATTEMPT_REBASE
 
@@ -57,12 +61,19 @@ function check() {
     echo ""
 
     if [[ "$ATTEMPT_REBASE" == "true" ]]; then
+      echo "Attempting rebase using ${BASE_BRANCH}..."
       git fetch
       git rebase "${BASE_BRANCH}"
+      echo ""
+      echo "Rebase done."
+      echo ""
       exit 0
     elif [[ "$FAIL_ON_CHANGES" == "true" ]]; then
       echo "Failing step to prevent further execution (FAIL_ON_CHANGES=$FAIL_ON_CHANGES)."
       exit 1
+    else
+      echo "Action is configured with fail_on_changes: ${FAIL_ON_CHANGES} and rebase: ${ATTEMPT_REBASE} -- continuing without throwing error."
+      exit 0
     fi
 
     [[ "$DEBUG_MODE" == "true" ]] && set -x
