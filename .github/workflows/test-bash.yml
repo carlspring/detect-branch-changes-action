@@ -81,7 +81,7 @@ jobs:
       id: out_of_sync_rebased
       uses: ./
       with:
-        debug: false
+        debug: true
         rebase: true
         base_branch: test-base-branch
         pathspec: "scripts linux epic"
