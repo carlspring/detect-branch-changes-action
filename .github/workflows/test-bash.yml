@@ -1,106 +1,70 @@
-name: test-bash
+#!/usr/bin/env bash
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+set -e
 
-jobs:
-  test-bash-versions:
-    runs-on: ubuntu-latest
-    container:
-      image: ${{ matrix.bashImage }}
-      volumes:
-        # You need this, because you will get
-        # /__w/_temp/caf26c6a-3b17-46ef-99c2-b3fc28a7be7c.sh: line 1: /home/runner/work/detect-branch-changes-action/detect-branch-changes-action/.//entrypoint.sh: not found
-        - /home/runner/work:/home/runner/work
+echo "Script version 1.0.0"
 
-    strategy:
-      fail-fast: false
-      matrix:
-        # "bash:3.2.57" does not have readarray
-        bashImage: [ "bash:4.0.44", "bash:4.1.17", "bash:4.2.53", "bash:4.3.48", "bash:4.4.23", "bash:5.0.18",  "bash:5.1.16" ]
+echo "-------------"
+echo "BASH_VERSION:   ${BASH_VERSION}"
 
-    steps:
-    - name: Install git
-      run: apk add --no-cache git
-      
-    - uses: actions/checkout@v2
-      
-    - name: Configure git user and email (fake)
-      run: git config --global user.email "you@example.com" && git config --global user.name "Your Name"
-      
-    - name: "Create a temporary branch: test-base-branch"
-      run: git checkout -B test-base-branch
-      
-    - name: "Create a temporary branch: test-out-of-sync-branch"
-      run: git checkout -B test-out-of-sync-branch 
-      
-    - name: Commit into test-base-branch to make our testing branch out of sync
-      run: |
-        git checkout test-base-branch
-        mkdir scripts linux epic
-        echo "" > scripts/test-base-branch
-        echo "" > linux/ninja
-        echo "" > epic/hello
-        git add scripts/test-base-branch
-        git add linux/ninja
-        git add epic/hello
-        git commit -m "Added test-base-branch"
-        
-    - name: List last 10 commits in test-base-branch
-      run: "git branch ; git log --oneline -n 10; git log --pretty=oneline -- scripts
-#/* linux/* epic/*"
-      
-    - name: Switch back to test-out-of-sync-branch
-      run: git checkout test-out-of-sync-branch
-      
-    - name: List last 10 commits in test-base-branch
-      run: "git branch ; git log --oneline -n 10; git log --pretty=oneline -- scripts
-#/* linux/* epic/*"
-      
-    - name: Expected to fail because test-out-of-sync-branch is out of sync with test-base-branch
-      continue-on-error: true
-      id: out_of_sync
-      uses: ./
-      with:
-        debug: false
-        rebase: false
-        fail_on_changes: true
-        base_branch: test-base-branch
-        pathspec: "scripts/* linux/* epic/*"
-        
-    - name: Debug
-      env : { DEBUG : "${{ toJson(steps.out_of_sync.outputs) }}" }
-      run: "echo $DEBUG"
-      
-    - name: Fail if previous step did not find any changes.
-      if: ${{ steps.out_of_sync.outputs.changed != 'true' }}
-      run: "echo Script did not detect changes! ; exit 1"
-      
-    - name: Expected to work because test-out-of-sync-branch is rebased using test-base-branch
-      id: out_of_sync_rebased
-      uses: ./
-      with:
-        debug: false
-        rebase: true
-        base_branch: test-base-branch
-#        pathspec: "scripts/* linux/* epic/*"
-        pathspec: "scripts"
-        
-    - name: Debug
-      env : { DEBUG : "${{ toJson(steps.out_of_sync_rebased.outputs) }}" }
-      run: "echo $DEBUG"
-      
-    - name: Fail if previous step did not find any changes.
-      if: ${{ steps.out_of_sync_rebased.outputs.changed != 'true' }}
-      run: "echo Script did not detect changes! ; exit 1"
-      
-    - name: Fail if previous step did not rebase.
-      if: ${{ steps.out_of_sync_rebased.outputs.rebased != 'true' }}
-      run: "echo Script did not rebase! ; exit 1"
-      
-    - name: List last 10 commits in test-base-branch
-      run: "git branch ; git log --oneline -n 10"
-      
+echo "GIT_VERSION:    `git --version`"
+
+DEBUG_MODE="$1"
+echo "DEBUG_MODE:     ${DEBUG_MODE}"
+
+ATTEMPT_REBASE="$2"
+echo "ATTEMPT_REBASE: ${ATTEMPT_REBASE}"
+
+FAIL_ON_CHANGES="$3"
+echo "FAIL_ON_CHANGES (and ATTEMPT_REBASE=false): ${FAIL_ON_CHANGES}"
+
+# The remotes/origin part was previously hardcoded here and removed to allow better testing. 
+# If you need it, then put `remotes/origin/branch_name` as part of the `base_branch` input.
+BASE_BRANCH="$4"
+echo "BASE_BRANCH:    ${BASE_BRANCH}"
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "CURRENT_BRANCH: ${CURRENT_BRANCH}"
+
+FORK_POINT_SHA=$(git merge-base --fork-point $BASE_BRANCH || git merge-base $BASE_BRANCH HEAD)
+echo "FORK_POINT_SHA: ${FORK_POINT_SHA}"
+
+PATHSPEC=${@:5}
+echo "PATHSPEC:       ${PATHSPEC}"
+
+echo "-------------"
+
+echo ::set-output name=fork_point_sha::$FORK_POINT_SHA
+
+function check() {
+  [[ "$DEBUG_MODE" == "true" ]] && set -x
+
+  readarray -t changed_paths< <(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC | sort -u)
+
+  if [[ -z "$(git diff --name-only $BASE_BRANCH..$CURRENT_BRANCH -- $PATHSPEC)" ]];
+  then
+    echo "$BASE_BRANCH has no incoming changes for '${PATHSPEC}'"
+    echo ::set-output name=changed::false 
+    echo ::set-output name=rebased::$ATTEMPT_REBASE
+  else
+    echo "The $BASE_BRANCH upstream branch has incoming changes, (PATHSPEC: '${PATHSPEC}'):"
+    echo ::set-output name=changed::true
+    echo ::set-output name=rebased::$ATTEMPT_REBASE
+
+    echo "Detected changes in the following paths:"
+    echo "${changed_paths[@]}"
+
+    if [[ "$ATTEMPT_REBASE" == "true" ]]; then
+      git fetch
+      git rebase "${BASE_BRANCH}"
+    elif [[ "$FAIL_ON_CHANGES" == "true" ]]; then
+      echo "Failing step to prevent further execution (FAIL_ON_CHANGES=$FAIL_ON_CHANGES)."
+      exit 1
+    fi
+
+    [[ "$DEBUG_MODE" == "true" ]] && set -x
+
+  fi
+}
+
+check
